@@ -1,0 +1,33 @@
+name: Deploy Blazor WebAssembly App to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  publish:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Pre Checkout
+      uses: actions/checkout@v3
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build -c Release --no-restore
+    - name: Publish
+      run: dotnet publish -c Release -o release --no-build --nologo
+    - name: Update index.html
+      run: sed -i 's/<base href="\/" \/> / <base href="\/BlazorWebAssemblyApp\/" \/>/g' release/wwwroot/index.html
+    # https://github.blog/2009-12-29-bypassing-jekyll-on-github-pages/
+    - name: Bypassing Jekyll
+      run: touch release/wwwroot/.nojekyll
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.4.0
+      with: 
+        folder: release/wwwroot
